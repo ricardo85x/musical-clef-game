@@ -75,6 +75,8 @@ export default function Home() {
             setEnabledLines([...enabledLines, index])
         }
 
+        loadRandomNotes()
+
 
 
         // setLines({
@@ -207,12 +209,18 @@ export default function Home() {
                     <MenuButton as={Button} rightIcon={<FiChevronDown />}>
                         Natural Flat
                     </MenuButton>
-                    <MenuList align="center">
+                    <MenuList align="center"
+                    
+                        minW="139px"
+
+                        backgroundColor="gray.100"
+
+                    >
 
                         {lines.notes.map((note) => (
 
 
-                            <Box width="100%" align="center"
+                            <Box align="center"
 
                             key={note.index}
 
@@ -258,7 +266,7 @@ export default function Home() {
                                 // display={note.enabled === false && note.additional ? "none": "inherit"} 
 
 
-                                w={note.additional ? "50px" : "200px"}
+                                w={note.additional ? "50px" : "90%"}
 
                               
 
