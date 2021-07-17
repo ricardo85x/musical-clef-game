@@ -194,7 +194,7 @@ export default function Home() {
 
 
 
-            <Flex gridGap="2" direction="row" width="100%" align="center" justify="center">
+            <Flex gridGap="2" flexWrap="wrap" direction="row" width="100%" align="center" justify="center">
                 <Text fontSize="28" fontWeight="medium" pb="2">The random({lines.previous}) Claf </Text>
                 <Select w="200px" defaultValue={secondsInterval ? secondsInterval : 3} onChange={(e) => setSecondsInterval(Number(e.target.value))} >
                     <option value={0.5} key={0.5}>0.5 seconds</option>
@@ -233,6 +233,8 @@ export default function Home() {
                             }}
 
                             onClick={() => handleEnableNote(note.index)}
+
+                                title="Enable/Disable item to learn"
 
                                 >
 
