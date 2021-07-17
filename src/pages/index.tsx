@@ -215,11 +215,13 @@ export default function Home() {
                             <Box width="100%" align="center"
 
                             key={note.index}
+
+                            backgroundColor={note.enabled ? "green.100" : "inherit"}
                             
                             
                             cursor="pointer"
                             _hover={{
-                                backgroundColor: "red.400"
+                                backgroundColor: "green.400"
                             }}
 
                             onClick={() => handleEnableNote(note.index)}
