@@ -213,6 +213,8 @@ export default function Home() {
 
 
                             <Box width="100%" align="center"
+
+                            key={note.index}
                             
                             
                             cursor="pointer"
@@ -256,7 +258,7 @@ export default function Home() {
 
                                 w={note.additional ? "50px" : "200px"}
 
-                                key={note.index}
+                              
 
 
                                 
@@ -286,19 +288,7 @@ export default function Home() {
 
 
 
-                            // <MenuItem 
-                            //     key={note.index} 
-                            //     value={note.index}  
-                            //     backgroundColor={note.enabled ? "green.300" : "inherit"}
-
-                            //     borderBottom="2px solid red"
-                            //     borderBottomWidth="1px"
-
-                            //     onClick={() => handleEnableNote(note.index)}
-
-                            // > 
-                            //     # <Icon as={IoMusicalNote} /> 
-                            // </MenuItem>
+                           
                         ))}
 
                     </MenuList>
@@ -318,6 +308,7 @@ export default function Home() {
                         direction="row"
                         align="center"
                         justify="center"
+
 
                         _after={note.hasLine ? {
                             flexGrow: 1,
