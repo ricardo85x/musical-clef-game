@@ -2,7 +2,9 @@ import { Flex, Box, Text, Icon, Select, usePrefersReducedMotion, keyframes, Butt
 import { useEffect, useRef, useState } from "react";
 import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
-import { AiTwotoneCheckCircle} from "react-icons/ai"
+import { AiTwotoneCheckCircle } from "react-icons/ai"
+import { parseCookies, setCookie } from 'nookies'
+
 
 interface NotesProps {
 
@@ -52,9 +54,26 @@ const arrayRange = (from: number, to: number) => {
 
 export default function Home() {
 
+    const cookies = parseCookies()
 
-    const [secondsInterval, setSecondsInterval] = useState(3)
-    const [enabledLines, setEnabledLines] = useState<number[]>(arrayRange(12, 22))
+
+    const defaultCookieOptions = {
+        maxAge: 60 * 60 * 24 * 30,// 30 days
+        path: "/" // valid on whole app
+    }
+
+
+
+
+    const [secondsInterval, setSecondsInterval] = useState(
+        cookies?.secondsInterval ? JSON.parse(cookies.secondsInterval) : 3
+    )
+
+
+
+    const [enabledLines, setEnabledLines] = useState<number[]>(
+        cookies?.enabledLines ? JSON.parse(cookies.enabledLines) : arrayRange(12, 22)
+    )
 
     const componentLinesRef = useRef(null);
 
@@ -67,12 +86,10 @@ export default function Home() {
     const handleEnableNote = (index: number) => {
 
         if (enabledLines.includes(index)) {
-            console.log("removendo", index)
-            setEnabledLines(enabledLines.filter(line => line !== index))
+            handleSetEnabledLines(enabledLines.filter(line => line !== index))
 
         } else {
-            console.log("adicionando", index)
-            setEnabledLines([...enabledLines, index])
+            handleSetEnabledLines([...enabledLines, index])
         }
 
         loadRandomNotes()
@@ -132,8 +149,6 @@ export default function Home() {
         const selectedNote = validIndexes[selectedIndex]
 
 
-        console.log("previous", linesRef.current.previous)
-        console.log("new", selectedNote)
 
 
 
@@ -155,7 +170,6 @@ export default function Home() {
 
     useEffect(() => {
 
-        console.log("OPA!")
 
         if (secondsInterval > 0) {
             const interval = setInterval(() => {
@@ -173,6 +187,24 @@ export default function Home() {
     useEffect(() => {
         loadRandomNotes();
     }, [])
+
+
+    const handleSetSecondsInterval = (_interval: any) => {
+
+        const valid_interval = Number(_interval);
+
+        if (valid_interval !== NaN) {
+            setSecondsInterval(valid_interval)
+            setCookie(null, 'secondsInterval', `${valid_interval}`, defaultCookieOptions)
+        }
+
+
+    }
+
+    const handleSetEnabledLines = (_enabledLines: number[]) => {
+        setEnabledLines(_enabledLines);
+        setCookie(null, 'enabledLines', JSON.stringify(_enabledLines), defaultCookieOptions)
+    }
 
 
     const noteTextSize = 6;
@@ -196,10 +228,10 @@ export default function Home() {
 
             <Flex gridGap="2" flexWrap="wrap" direction="row" width="100%" align="center" justify="center">
                 <Text fontSize="28" fontWeight="medium" pb="2">The random Claf </Text>
-                <Select w="200px" defaultValue={secondsInterval ? secondsInterval : 3} onChange={(e) => setSecondsInterval(Number(e.target.value))} >
-                    <option value={0.5} key={0.5}>0.5 seconds</option>
+                <Select w="200px" value={secondsInterval} onChange={(e) => handleSetSecondsInterval(e.target.value)} >
+                    <option    value={0.5} key={0.5}>0.5 seconds</option>
                     {[...new Array(10)].map((_, s) => (
-                        <option value={s + 1} key={s}>{`${s + 1} seconds`}</option>
+                        <option   value={s + 1} key={s}>{`${s + 1} seconds`}</option>
                     ))}
                 </Select>
 
@@ -210,7 +242,7 @@ export default function Home() {
                         Natural Flat
                     </MenuButton>
                     <MenuList align="center"
-                    
+
                         minW="139px"
 
                         backgroundColor="gray.100"
@@ -222,85 +254,70 @@ export default function Home() {
 
                             <Box align="center"
 
-                            key={note.index}
+                                key={note.index}
 
-                            backgroundColor={note.enabled ? "green.100" : "inherit"}
-                            
-                            
-                            cursor="pointer"
-                            _hover={{
-                                backgroundColor: "green.400"
-                            }}
+                                backgroundColor={note.enabled ? "green.100" : "inherit"}
 
-                            onClick={() => handleEnableNote(note.index)}
+
+                                cursor="pointer"
+                                _hover={{
+                                    backgroundColor: "green.400"
+                                }}
+
+                                onClick={() => handleEnableNote(note.index)}
 
                                 title="Enable/Disable item to learn"
 
-                                >
-
-<Flex
-                                direction="row"
-                                align="center"
-                                justify="center"
-
-                                _after={note.hasLine ? {
-                                    flexGrow: 1,
-                                    flexShrink: 1,
-                                    flexBasis: "auto",
-                                    content: '""',
-                                    height: 0,
-                                    borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
-
-                                    marginLeft: `-${noteTextSize}`
-                                } : {}}
-
-                                _before={note.hasLine ? {
-                                    flexGrow: 1,
-                                    flexShrink: 1,
-                                    flexBasis: "auto",
-                                    content: '""',
-                                    height: 0,
-                                    borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
-                                    marginRight: `-${noteTextSize}`
-
-                                } : {}}
-
-                                // display={note.enabled === false && note.additional ? "none": "inherit"} 
-
-
-                                w={note.additional ? "50px" : "90%"}
-
-                              
-
-
-                                
-
                             >
 
+                                <Flex
+                                    direction="row"
+                                    align="center"
+                                    justify="center"
 
-                                <Box
+                                    _after={note.hasLine ? {
+                                        flexGrow: 1,
+                                        flexShrink: 1,
+                                        flexBasis: "auto",
+                                        content: '""',
+                                        height: 0,
+                                        borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
 
-                                    color={`${note.enabled ? "green" : "black"}`}
+                                        marginLeft: `-${noteTextSize}`
+                                    } : {}}
 
+                                    _before={note.hasLine ? {
+                                        flexGrow: 1,
+                                        flexShrink: 1,
+                                        flexBasis: "auto",
+                                        content: '""',
+                                        height: 0,
+                                        borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
+                                        marginRight: `-${noteTextSize}`
 
-                                    
+                                    } : {}}
+
+                                    // display={note.enabled === false && note.additional ? "none": "inherit"} 
+
+                                    w={note.additional ? "50px" : "90%"}
+
                                 >
-                                    <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} />
-                                </Box>
 
 
+                                    <Box
+
+                                        color={`${note.enabled ? "green" : "black"}`}
+
+                                    >
+                                        <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} />
+                                    </Box>
 
 
-                            </Flex>
+                                </Flex>
 
                             </Box>
-                            
-                            
 
 
-
-
-                           
                         ))}
 
                     </MenuList>
@@ -362,9 +379,6 @@ export default function Home() {
 
 
             </Box>
-
-
-
 
         </Flex>
     )
