@@ -25,6 +25,8 @@ interface LineProps {
         type: number[];
     }[]
     previous: number;
+    max: number;
+    min: number;
 
 }
 
@@ -90,9 +92,9 @@ export default function Home() {
 
     const componentLinesRef = useRef(null);
 
-    const [lines, setLines] = useState<LineProps>({ notes: [], previous: 11 })
+    const [lines, setLines] = useState<LineProps>({ notes: [], previous: 11, max: 0, min: 0 })
 
-    const linesRef = useRef<LineProps>({ notes: [], previous: 11 })
+    const linesRef = useRef<LineProps>({ notes: [], previous: 11, max: 0, min: 0 })
 
 
     const handleSetEnabledTypes = (_enabledTypes: EnabledTypesProps[]) => {
@@ -155,7 +157,7 @@ export default function Home() {
                     ...arrayRange(21, 32)
                 ].includes(line.index),
                 hasLine: line.index % 2 == 0,
-                base: arrayRange(12, 22).includes(line.index),
+                base: arrayRange(12, 21).includes(line.index),
                 type: !!currentEnabledType.length ?
                     currentEnabledType.map(e => e.type) : [1]
             }
@@ -176,7 +178,9 @@ export default function Home() {
                     hasNote: selectedNote === line.index
                 }
             }),
-            previous: selectedNote
+            previous: selectedNote,
+            max: Math.max(..._lines.filter(f => f.enabled).map(m => m.index)),
+            min: Math.min(..._lines.filter(f => f.enabled).map(m => m.index))
         }
 
         setLines(linesRef.current)
@@ -243,6 +247,8 @@ export default function Home() {
 
 
 
+
+
     const fadeOut = keyframes`
         0% { opacity: 1; }
         100% { opacity: 0; }
@@ -257,7 +263,7 @@ export default function Home() {
     return (
         <Flex align="center" justify="center" direction="column" >
 
-            <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center","center","space-between"]}>
+            <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center", "center", "space-between"]}>
 
                 <Box p="3" >
                     <Text fontSize="28" fontWeight="medium" pb="2">The random Claf </Text>
@@ -268,16 +274,16 @@ export default function Home() {
                     gridGap="2" flexWrap="wrap" direction="row" align="center" justify="center"
                 >
 
-                    
 
-                    <ButtonGroup colorScheme="black"  size="sm" isAttached variant="outline">
-                        <IconButton  onClick={() => handleSetNoteTextSize(-1)} aria-label="decrease Size" icon={<MinusIcon />} />
 
-                        <Button  mr="-px">Size {noteTextSize}</Button>
-                        <IconButton  onClick={() => handleSetNoteTextSize(1)} aria-label="increase Size" icon={<AddIcon />} />
+                    <ButtonGroup colorScheme="black" size="sm" isAttached variant="outline">
+                        <IconButton onClick={() => handleSetNoteTextSize(-1)} aria-label="decrease Size" icon={<MinusIcon />} />
+
+                        <Button mr="-px">Size {noteTextSize}</Button>
+                        <IconButton onClick={() => handleSetNoteTextSize(1)} aria-label="increase Size" icon={<AddIcon />} />
                     </ButtonGroup>
 
-                    <Select fontWeight="bold" variant="filled"  w="140px" value={secondsInterval} onChange={(e) => handleSetSecondsInterval(e.target.value)} >
+                    <Select fontWeight="bold" variant="filled" w="140px" value={secondsInterval} onChange={(e) => handleSetSecondsInterval(e.target.value)} >
 
                         <option value={0.5} key={0.5}>0.5 seconds</option>
                         {[...new Array(10)].map((_, s) => (
@@ -381,9 +387,16 @@ export default function Home() {
                 w="100%"
                 ref={componentLinesRef}
                 align="center"
+
+                pt="10"
+
             >
 
-                {lines.notes.map((note) => {
+                {lines.notes.filter(f =>
+                    // show only between min and max enabled or base
+                    (f.index >= lines.min && f.index <= lines.max) || f.base
+
+                ).map((note) => {
 
                     const current_type = note.type[
                         Math.floor(Math.random() * note.type.length)
@@ -402,7 +415,7 @@ export default function Home() {
                                 flexBasis: "auto",
                                 content: '""',
                                 height: 0,
-                                borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
+                                borderBottom: `2px solid black`,
 
                                 marginLeft: `-${noteTextSize}`
                             } : {}}
@@ -413,12 +426,13 @@ export default function Home() {
                                 flexBasis: "auto",
                                 content: '""',
                                 height: 0,
-                                borderBottom: `2px solid ${note.enabled ? "green" : "black"}`,
+                                borderBottom: `2px solid black`,
                                 marginRight: `-${noteTextSize}`
 
                             } : {}}
 
-                            w={note.additional ? "100px" : "100%"}
+                            w={note.additional ? "40px" : "100%"}
+
 
                         >
                             <Flex direction="row" w={noteTextSize} minW={noteTextSize} h={noteTextSize} >
