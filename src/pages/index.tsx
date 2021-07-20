@@ -39,6 +39,8 @@ const arrayRange = (from: number, to: number) => {
 
 export default function Home() {
 
+    const app_tittle = "Smart Music Notes";
+
 
     let localStorage: Storage;
 
@@ -266,7 +268,7 @@ export default function Home() {
             <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center", "center", "space-between"]}>
 
                 <Box p="3" >
-                    <Text fontSize="28" fontWeight="medium" pb="2">The random Claf </Text>
+                    <Text fontSize="28" fontWeight="medium" pb="2">{app_tittle}</Text>
                 </Box>
 
                 <Flex

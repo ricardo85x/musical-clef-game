@@ -1,5 +1,5 @@
-A tool that help you memorize the position of the musical notes in the score
+A tool to help you memorize the position of the music note on the staff
 
 demo
 
-https://musical-clef-game.vercel.app
+https://smart-music-notes.vercel.app/
