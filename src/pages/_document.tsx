@@ -12,7 +12,6 @@ export default class MyDocument extends Document {
 
                     <meta property="og:title" content="Smart Music Notes" />
                     <meta property="og:description" content="A tool to help you memorize the position of the music note on the staff" />
-                    <title>Smart Music Notes</title>
 
                 </Head>
                 <body>

@@ -1,9 +1,10 @@
-import { Flex, ButtonGroup, IconButton, Box, Text, Icon, Select, usePrefersReducedMotion, keyframes, Button, Menu, MenuButton, MenuList, MenuItem, Image } from "@chakra-ui/react"
+import { Flex, ButtonGroup, IconButton, Box, Grid, Text, Icon, RadioGroup, Radio, Select, Button, Menu, MenuButton, MenuList, MenuItem, Image, useToast } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react";
 import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
 import { AddIcon, MinusIcon } from "@chakra-ui/icons"
-import Router from "next/router"
+import Router from "next/router";
+
 interface EnabledTypesProps {
     index: number,
     type: number,
@@ -39,6 +40,8 @@ const arrayRange = (from: number, to: number) => {
 
 export default function Home() {
 
+    const toast = useToast()
+
     const app_tittle = "Smart Music Notes";
 
 
@@ -59,18 +62,16 @@ export default function Home() {
         !!localStorage?.getItem('noteTextSize') ? JSON.parse(localStorage.getItem('noteTextSize')) : 6
     );
 
-    const [secondsInterval, setSecondsInterval] = useState(
-        !!localStorage?.getItem('secondsInterval') ? JSON.parse(localStorage.getItem('secondsInterval')) : 3
-    )
 
-    const [enabledLines, setEnabledLines] = useState<number[]>(
-        !!localStorage?.getItem('enabledLines') ? JSON.parse(localStorage.getItem('enabledLines')) : arrayRange(12, 22)
+
+    const [enabledLinesEx1, setEnabledLines] = useState<number[]>(
+        !!localStorage?.getItem('enabledLinesEx1') ? JSON.parse(localStorage.getItem('enabledLinesEx1')) : arrayRange(12, 22)
 
     )
 
-    const [enabledTypes, setEnabledTypes] = useState<EnabledTypesProps[]>(
+    const [enabledTypesEx1, setEnabledTypes] = useState<EnabledTypesProps[]>(
 
-        !!localStorage?.getItem('enabledTypes') ? JSON.parse(localStorage.getItem('enabledTypes')) :
+        !!localStorage?.getItem('enabledTypesEx1') ? JSON.parse(localStorage.getItem('enabledTypesEx1')) :
             [...[...[...new Array(31)].map((_, i) => {
                 return {
                     index: i + 1,
@@ -98,17 +99,29 @@ export default function Home() {
 
     const linesRef = useRef<LineProps>({ notes: [], previous: 11, max: 0, min: 0 })
 
+    const [questions, setQuestions] = useState<{
+        name: string,
+        code: string,
+        correct: boolean,
+    }[]>([])
 
-    const handleSetEnabledTypes = (_enabledTypes: EnabledTypesProps[]) => {
-        setEnabledTypes(_enabledTypes);
-        localStorage?.setItem("enabledTypes", JSON.stringify(_enabledTypes));
+    const [selectedAnswer, setSelectedAnswer] = useState<string>("")
+
+    const [clef, setClef] = useState<string>(
+        !!localStorage?.getItem('clef_ex2') ? localStorage.getItem('clef_ex2') : "sol"
+    );
+
+
+    const handleSetEnabledTypes = (_enabledTypesEx1: EnabledTypesProps[]) => {
+        setEnabledTypes(_enabledTypesEx1);
+        localStorage?.setItem("enabledTypesEx1", JSON.stringify(_enabledTypesEx1));
     }
 
     const handleEnableNoteType = (index: number, type: number) => {
 
-        if (!!enabledTypes.filter(f => f.index == index && f.type == type)) {
+        if (!!enabledTypesEx1.filter(f => f.index == index && f.type == type)) {
 
-            handleSetEnabledTypes(enabledTypes.map(e => {
+            handleSetEnabledTypes(enabledTypesEx1.map(e => {
 
                 if (e.index == index && e.type == type) {
                     return {
@@ -119,10 +132,10 @@ export default function Home() {
                 return e
             }))
 
-            handleSetEnabledLines(enabledLines.filter(line => line !== index))
+            handleSetEnabledLines(enabledLinesEx1.filter(line => line !== index))
 
         } else {
-            handleSetEnabledLines([...enabledLines, index])
+            handleSetEnabledLines([...enabledLinesEx1, index])
         }
 
         loadRandomNotes()
@@ -148,7 +161,7 @@ export default function Home() {
         }).map(line => {
 
             // check if enabledType array has index enabled, no mather the type.
-            const currentEnabledType = enabledTypes.filter(f => f.index == line.index && f.enabled)
+            const currentEnabledType = enabledTypesEx1.filter(f => f.index == line.index && f.enabled)
 
             return {
                 ...line,
@@ -187,21 +200,70 @@ export default function Home() {
 
         setLines(linesRef.current)
 
+
+        generateRandomQuestions(selectedNote)
+
+
+
+
+
     }
 
-    useEffect(() => {
+    const generateRandomQuestions = (_selectedNoteIndex: number) => {
 
-        if (secondsInterval > 0) {
-            const interval = setInterval(() => {
-                loadRandomNotes()
-            }, 1000 * secondsInterval)
+        let _questions = [
+            { name: "Do", code: "C", correct: false },
+            { name: "Re", code: "D", correct: false },
+            { name: "Mi", code: "E", correct: false },
+            { name: "Fa", code: "F", correct: false },
+            { name: "Sol", code: "G", correct: false },
+            { name: "La", code: "A", correct: false },
+            { name: "Si", code: "B", correct: false },
+        ]
 
-            return () => {
-                clearInterval(interval);
-            }
+        const letters = ["A", "B", "C", "D", "E", "F", "G"]
+
+        let actual_letter = 0; // start from letter B
+
+        switch (clef){
+            case "sol":
+                actual_letter = 3;
+                break;
+            case "fa":
+                actual_letter = 5; 
+                break;
+            case "do":
+                actual_letter = 4; 
+                break;
+            default:
+                actual_letter = 3; // default SOL(G)
         }
 
-    }, [secondsInterval, enabledLines])
+
+
+        const _Clef = [...new Array(31)].map((_, i) => {
+
+            actual_letter--;
+            if (actual_letter < 0) {
+                actual_letter = letters.length - 1;
+            } else {
+
+            }
+            return letters[actual_letter];
+
+        })
+
+        setQuestions(_questions.map(q => {
+
+            return {
+                ...q,
+                correct: _Clef[_selectedNoteIndex - 1] === q.code
+            }
+        }))
+
+        setSelectedAnswer("")
+
+    }
 
 
     useEffect(() => {
@@ -209,15 +271,29 @@ export default function Home() {
     }, [])
 
 
-    const handleSetSecondsInterval = (_interval: any) => {
+    const handleSelectQuestion = (selected: string) => {
 
-        const valid_interval = Number(_interval);
+        setSelectedAnswer(selected)
 
-        if (valid_interval !== NaN) {
-            setSecondsInterval(valid_interval)
-            localStorage?.setItem("secondsInterval", `${valid_interval}`);
+        if (questions.find(f => f.code === selected && f.correct)) {
+            toast({
+                title: "Correct!",
+                status: "success",
+                duration: 1000 * 1
+            })
+        } else {
+            toast({
+                title: "Wrong Answer!",
+                status: "error",
+                duration: 1000 * 1
+            })
         }
 
+        setTimeout(
+            () => {
+                loadRandomNotes()
+            }, 1000 * 1 // wait 1 seconds
+        )
     }
 
 
@@ -242,50 +318,26 @@ export default function Home() {
 
     }
 
-    const handleSetEnabledLines = (_enabledLines: number[]) => {
-        setEnabledLines(_enabledLines);
-        localStorage?.setItem("enabledLines", JSON.stringify(_enabledLines));
+    const handleSetEnabledLines = (_enabledLinesEx1: number[]) => {
+        setEnabledLines(_enabledLinesEx1);
+        localStorage?.setItem("enabledLinesEx1", JSON.stringify(_enabledLinesEx1));
+    }
+
+    const handleSaveClef = (_clef: string) => {
+
+        const valid_clefs = ["sol", "fa", "do"]
+
+        if(valid_clefs.includes(_clef)) {
+            setClef(_clef);
+            localStorage?.setItem("clef_ex2", _clef);
+        }
+
     }
 
 
 
 
 
-    let fadeOut = keyframes`
-        0% { opacity: 1; }
-        100% { opacity: 0; }
-    `;
-
-    // fadeOut = keyframes`
-    //     0% {
-    //         left: 110%;
-    //     }
- 
-    //     100% {
-    //         left: -10%;    
-    //     }
-    // `;
-
-    // fadeOut = keyframes`
-    //     0% {
-    //         transform: translateX(100%);
-
-    //     }
-
-    //     100% {
-    //         transform: translateX(0%);
-    //     }
-    // `;
-
-    const prefersReducedMotion = usePrefersReducedMotion()
-
-    let fadeOutAnimation = prefersReducedMotion
-        ? undefined
-        : `${fadeOut} ${secondsInterval}s linear normal forwards`;
-
-    // fadeOutAnimation = prefersReducedMotion
-    //     ? undefined
-    //     : `${fadeOut} ${secondsInterval}s linear`;
 
     return (
         <Flex align="center" justify="center" direction="column" >
@@ -299,22 +351,22 @@ export default function Home() {
                 <Flex
                     p="3"
                     gridGap="2" flexWrap="wrap" direction="row" align="center" justify="center"
-                >   
+                >
+
 
                     <Menu  >
                         <MenuButton colorScheme="blue" as={Button} rightIcon={<FiChevronDown />}>
-                            Lesson 1
+                            Lesson 2
                         </MenuButton>
                         <MenuList
                             align="center"
                             minW="139px"
                             backgroundColor="gray.100"
                         >
-                            <MenuItem >Lesson 1</MenuItem>
-                            <MenuItem onClick={() => Router.push("/lesson2")}>Lesson 2</MenuItem>
+                            <MenuItem onClick={() => Router.push("/")}>Lesson 1</MenuItem>
+                            <MenuItem >Lesson 2</MenuItem>
                         </MenuList>
                     </Menu>
-
 
 
                     <ButtonGroup colorScheme="black" size="sm" isAttached variant="outline">
@@ -324,19 +376,21 @@ export default function Home() {
                         <IconButton onClick={() => handleSetNoteTextSize(1)} aria-label="increase Size" icon={<AddIcon />} />
                     </ButtonGroup>
 
-                    <Select fontWeight="bold" variant="filled" w="140px" value={secondsInterval} onChange={(e) => handleSetSecondsInterval(e.target.value)} >
+                    
 
-                        <option value={0.5} key={0.5}>0.5 seconds</option>
-                        {[...new Array(10)].map((_, s) => (
-                            <option value={s + 1} key={s}>{`${s + 1} seconds`}</option>
-                        ))}
+
+
+                    <Select fontWeight="bold" variant="filled" w="140px" value={clef} onChange={(e) => handleSaveClef(e.target.value)} >
+
+                        <option value="sol">G clef</option>
+                        <option value="fa">F clef</option>
+                        <option value="do">C clef</option>
 
                     </Select>
-
-                    {[...new Array(3)].map((_, m) => (
+                    {[...new Array(1)].map((_, m) => (
                         <Menu key={`menu_${m + 1}`}>
                             <MenuButton as={Button} rightIcon={<FiChevronDown />}>
-                                {m === 0 ? "Flat Notes" : m === 1 ? "Natural Notes" : "Sharp Notes"}
+                                Notes
                             </MenuButton>
                             <MenuList
                                 align="center"
@@ -345,7 +399,7 @@ export default function Home() {
                             >
                                 {lines.notes.map((note) => {
 
-                                    const enabled = !!enabledTypes.find(f => f.index === note.index && f.type === m && f.enabled) ? true : false;
+                                    const enabled = !!enabledTypesEx1.find(f => f.index === note.index && f.type === 1 && f.enabled) ? true : false;
 
                                     return (
                                         <Box
@@ -357,7 +411,7 @@ export default function Home() {
                                                 backgroundColor: "green.400"
                                             }}
 
-                                            onClick={() => handleEnableNoteType(note.index, m)}
+                                            onClick={() => handleEnableNoteType(note.index, 1)}
 
                                             title="Enable/Disable item to learn"
 
@@ -396,7 +450,7 @@ export default function Home() {
                                                 <Box
                                                     color={`${!!enabled ? "green" : "black"}`}
                                                 >
-                                                    {m == 0 ? "b" : m == 2 && "#"}
+                                                    {/* {m == 0 ? "b" : m == 2 && "#"} */}
                                                     <Icon w={6} h={6} as={IoMusicalNote} />
 
 
@@ -424,6 +478,23 @@ export default function Home() {
 
             </Flex>
 
+
+            <Text fontWeight="medium" fontSize="20" p={5}>Select the Right Answer </Text>
+
+            <RadioGroup m={4}  maxWidth="300"  width="100%"  defaultValue="" value={selectedAnswer} onChange={(_value) => handleSelectQuestion(_value)} >
+
+                <Grid templateColumns="1fr 1fr 1fr" >
+
+                    {questions.map((q, i) => (
+                        <Radio   key={i} colorScheme={q.correct ? "green" : "red"} value={q.code}>
+                            <Text fontSize="20" fontWeight="medium">{q.code} - {q.name}</Text>
+                        </Radio>
+                    ))}
+
+                </Grid>
+
+            </RadioGroup>
+
             <Box
                 w="100%"
                 ref={componentLinesRef}
@@ -450,7 +521,7 @@ export default function Home() {
                             align="center"
                             justify="center"
 
-                            
+
 
                             _after={note.hasLine ? {
                                 flexGrow: 1,
@@ -478,22 +549,22 @@ export default function Home() {
 
 
                         >
-                            <Flex   direction="row" w={noteTextSize} minW={noteTextSize} h={noteTextSize} >
+                            <Flex direction="row" w={noteTextSize} minW={noteTextSize} h={noteTextSize} >
                                 {
                                     note.hasNote &&
                                     (
-                                        <Flex  direction="row" align="flex-end" >
-                                            <Flex animation={fadeOutAnimation}  position="absolute" direction="row" align="flex-end">
+                                        <Flex direction="row" align="flex-end" >
+                                            <Flex position="absolute" direction="row" align="flex-end">
 
-                                            {current_type == 0 ?
-                                                <Image   w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/flat_music_note.svg" /> : current_type == 2 &&
-                                                <Image  w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/sharp_music_note.svg" />
-                                            }
-                                            {/* <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} /> */}
-                                            <Image    w={noteTextSize} h={noteTextSize} src="/images/quarter_note.svg" />
+                                                {current_type == 0 ?
+                                                    <Image w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/flat_music_note.svg" /> : current_type == 2 &&
+                                                    <Image w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/sharp_music_note.svg" />
+                                                }
+                                                {/* <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} /> */}
+                                                <Image w={noteTextSize} h={noteTextSize} src="/images/quarter_note.svg" />
 
                                             </Flex>
-                                            
+
                                         </Flex>
                                     )
                                 }
