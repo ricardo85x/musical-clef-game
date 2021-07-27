@@ -4,6 +4,7 @@ import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
 import { AddIcon, MinusIcon } from "@chakra-ui/icons"
 import Router from "next/router";
+import { KeyboardEventHandler } from "react";
 
 interface EnabledTypesProps {
     index: number,
@@ -335,12 +336,26 @@ export default function Home() {
     }
 
 
+    const handleKeyPress = (event) => {
+
+        if(["A", "B", "C", "D", "E", "F", "G"].includes(event.key.toUpperCase())){
+            handleSelectQuestion(event.key.toUpperCase())
+        }
+    }
+
+
 
 
 
 
     return (
-        <Flex align="center" justify="center" direction="column" >
+        <Flex align="center" justify="center" direction="column" 
+        
+            onKeyDown={handleKeyPress}
+            tabIndex={0}
+        >
+
+
 
             <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center", "center", "space-between"]}>
 
