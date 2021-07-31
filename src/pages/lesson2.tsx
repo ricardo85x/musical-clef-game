@@ -4,7 +4,11 @@ import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
 import { AddIcon, MinusIcon } from "@chakra-ui/icons"
 import Router from "next/router";
-import { KeyboardEventHandler } from "react";
+import dynamic from 'next/dynamic';
+
+const AbcJSComponent = dynamic(() => import('../components/AbcJS'), {
+    ssr: false
+})
 
 interface EnabledTypesProps {
     index: number,
@@ -38,6 +42,8 @@ const arrayRange = (from: number, to: number) => {
     }
     return []
 }
+
+
 
 export default function Home() {
 
@@ -226,15 +232,15 @@ export default function Home() {
 
         let actual_letter = 0; // start from letter B
 
-        switch (clef){
+        switch (clef) {
             case "sol":
                 actual_letter = 3;
                 break;
             case "fa":
-                actual_letter = 5; 
+                actual_letter = 5;
                 break;
             case "do":
-                actual_letter = 4; 
+                actual_letter = 4;
                 break;
             default:
                 actual_letter = 3; // default SOL(G)
@@ -328,7 +334,7 @@ export default function Home() {
 
         const valid_clefs = ["sol", "fa", "do"]
 
-        if(valid_clefs.includes(_clef)) {
+        if (valid_clefs.includes(_clef)) {
             setClef(_clef);
             localStorage?.setItem("clef_ex2", _clef);
         }
@@ -338,22 +344,80 @@ export default function Home() {
 
     const handleKeyPress = (event) => {
 
-        if(["A", "B", "C", "D", "E", "F", "G"].includes(event.key.toUpperCase())){
+        if (["A", "B", "C", "D", "E", "F", "G"].includes(event.key.toUpperCase())) {
             handleSelectQuestion(event.key.toUpperCase())
         }
     }
 
 
+    const abcRef = useRef<HTMLDivElement>(undefined)
 
+    const abc_notation = `
+    % - instruction to first line
+    X:1 
+    % - Show 4/4 in the beginning
+    % M:4/4
+    L:1/4
+  
+    % - D2 modifier the duration of the note 
+    b' C,`;
 
+    const abcNotationArray = [
+        "b'","a'","g'","f'","d'","c'", "b", "a", "g",
+        "f", "e", "d", "c", "B", "A", "G", "F", "E",
+        "D", "C", "B,", "A,", "G,", "F", "E,", "D,", "C,"
+    ]
+    
+
+    const renderABCx = () => {
+
+        setTimeout(() => {
+
+         //   abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
+
+        }, 1000 * 5)
+
+        if(Element){
+            console.log("com element", Element)
+        } else {
+            console.log("sem element")
+        }
+
+        if(process.browser){
+            // abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
+
+        } else {
+            console.log("not in browser")
+        }
+
+        if(abcRef?.current?.id){
+            console.log("ID",abcRef.current.id)
+            console.log(abcRef.current)
+
+            setTimeout(() => {
+                // abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
+            }, 1000 * 2)
+
+          
+           //
+        }
+        console.log("rendering")
+
+    }
+
+    useEffect(() => {renderABCx()}, [])
+
+  
 
 
     return (
-        <Flex align="center" justify="center" direction="column" 
-        
+        <Flex align="center" justify="center" direction="column"
+
             onKeyDown={handleKeyPress}
             tabIndex={0}
         >
+
+
 
 
 
@@ -391,7 +455,7 @@ export default function Home() {
                         <IconButton onClick={() => handleSetNoteTextSize(1)} aria-label="increase Size" icon={<AddIcon />} />
                     </ButtonGroup>
 
-                    
+
 
 
 
@@ -493,15 +557,32 @@ export default function Home() {
 
             </Flex>
 
+{/* 
+            <Abcjs
+                abcNotation={
+                    'X:1\nT:Example\nM:4/4\nC:Trad.\nK:G\n|:Gccc dedB|dedB dedB|c2ec B2dB|c2A2 A2BA|'
+                }
+                parserParams={{}}
+                engraverParams={{ responsive: 'resize' }}
+                renderParams={{ viewportHorizontal: true }}
+            /> */}
+
+           
+            <Box width="100%" align="center" justify="center">
+                <AbcJSComponent 
+                    notation={abc_notation}
+                />
+            </Box>
+           
 
             <Text fontWeight="medium" fontSize="20" p={5}>Select the Right Answer </Text>
 
-            <RadioGroup m={4}  maxWidth="300"  width="100%"  defaultValue="" value={selectedAnswer} onChange={(_value) => handleSelectQuestion(_value)} >
+            <RadioGroup m={4} maxWidth="300" width="100%" defaultValue="" value={selectedAnswer} onChange={(_value) => handleSelectQuestion(_value)} >
 
                 <Grid templateColumns="1fr 1fr 1fr" >
 
                     {questions.map((q, i) => (
-                        <Radio   key={i} colorScheme={q.correct ? "green" : "red"} value={q.code}>
+                        <Radio key={i} colorScheme={q.correct ? "green" : "red"} value={q.code}>
                             <Text fontSize="20" fontWeight="medium">{q.code} - {q.name}</Text>
                         </Radio>
                     ))}
