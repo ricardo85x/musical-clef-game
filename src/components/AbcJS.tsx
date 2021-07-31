@@ -42,7 +42,6 @@ const AbcJSComponent = ({ notation }: AbcJSProps) => {
 
     return (
         <Box width="100%" align="center" justify="center" >
-            <b>{notation}</b>
             <Box width="310px"  ref={abcRef} />
             {/* <Box width="100%"  ref={abcRef} /> */}
         </Box>
