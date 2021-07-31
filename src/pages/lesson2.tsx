@@ -15,9 +15,7 @@ interface EnabledTypesProps {
     enabled: boolean,
 }
 
-interface LineProps {
-
-    notes: {
+interface NoteProps {
         index: number;
         enabled: boolean;
         additional: boolean;
@@ -26,32 +24,21 @@ interface LineProps {
         base: boolean;
         type: number[];
         notation: string;
-    }[]
+        answer?: string;
+}
+
+
+interface LineProps {
+
+    notes: NoteProps[]
     previous: number;
 
 }
 
 
-interface LineProps2 {
-
-    notes: {
-        index: number;
-        enabled: boolean;
-        additional: boolean;
-        hasNote: boolean;
-        hasLine: boolean;
-        base: boolean;
-        normalNote: boolean;
-        sharpNote: boolean;
-        flatNote: boolean;
-        type: number[];
-        notation: string;
-
-    }[]
-    previous: number;
-    max: number;
-    min: number;
-
+interface AbcNotationProps {
+    notation: string;
+    note: string
 }
 
 const arrayRange = (from: number, to: number) => {
@@ -190,7 +177,7 @@ export default function Home() {
 
 
 
-    const loadRandomNotes = () => {
+    const loadRandomNotes = (_clef?: string) => {
 
         let _lines = [...new Array(abcNotationArray.length)].map((_, i) => {
             return {
@@ -245,7 +232,18 @@ export default function Home() {
                 const accident = random_accident_type === 0 ?
                 "_" : random_accident_type === 2 ?
                 "^" : "";
+                
+                // bass = F
+                // treble = G
+                // alto = C 3
+                // tenor = C 4
+                // perc = bateria
 
+                const clefNotation = {
+                    sol: "treble",
+                    fa: "bass",
+                    do: "alto"
+                }
 
                 return {
                     ...line,
@@ -253,10 +251,13 @@ export default function Home() {
                     notation: selectedNote === line.index ? 
                     `
                         X:1
-                        L:1/4
+                        K: clef=${clefNotation[_clef ? _clef : clef ]}
                         ${accident}${abcNotationArray[line.index - 1]}
                     ` : 
-                    line.notation
+                    line.notation,
+                    answer: selectedNote === line.index ? 
+                        abcNotationArray[line.index - 1]:
+                        ''
                 }
             }),
             previous: selectedNote
@@ -265,15 +266,28 @@ export default function Home() {
 
         setLines(linesRef.current)
 
-        generateRandomQuestions(selectedNote)
+        generateRandomQuestions()
         
 
     }
 
 
-    const generateRandomQuestions = (_selectedNoteIndex: number) => {
+    const generateRandomQuestions = () => {
 
-        let _questions = [
+        const currentNote = linesRef.current.notes.find(
+            n => n.hasNote && linesRef.current.previous == n.index
+        )
+
+        let answer = "";
+
+        if(currentNote?.answer){
+            const m1 = currentNote.answer.match(/(\w)/)
+            if (m1){
+                answer = m1[1].toUpperCase()
+            }
+        }
+
+        const _questions = [
             { name: "Do", code: "C", correct: false },
             { name: "Re", code: "D", correct: false },
             { name: "Mi", code: "E", correct: false },
@@ -281,51 +295,15 @@ export default function Home() {
             { name: "Sol", code: "G", correct: false },
             { name: "La", code: "A", correct: false },
             { name: "Si", code: "B", correct: false },
-        ]
-
-        const letters = ["A","B", "C", "D", "E", "F", "G"]
-
-        let actual_letter = 2;
-
-        switch (clef) {
-            case "sol":
-                actual_letter = 2;
-                break;
-            case "fa":
-                actual_letter = 4;
-                break;
-            case "do":
-                actual_letter = 3;
-                break;
-            default:
-                actual_letter = 2; // default SOL(G)
-        }
-
-
-        const _Clef = [...new Array(abcNotationArray.length)].map((_, i) => {
-
-            actual_letter--;
-            if (actual_letter < 0) {
-                actual_letter = letters.length - 1;
-            } else {
-
-            }
-            return letters[actual_letter];
-
-        })
-
-        setQuestions(_questions.map(q => {
-
+        ].map(q => {
             return {
                 ...q,
-                correct: _Clef[_selectedNoteIndex - 1] === q.code
+                correct: answer === q.code
             }
-        }))
-
+        })
+    
+        setQuestions(_questions)
         setSelectedAnswer("")
-
-        console.log("Cruzes",_questions)
-
     }
 
 
@@ -372,6 +350,7 @@ export default function Home() {
         if (valid_clefs.includes(_clef)) {
             setClef(_clef);
             localStorage?.setItem("clef_ex2", _clef);
+            loadRandomNotes(_clef)
         }
 
     }
@@ -415,13 +394,13 @@ export default function Home() {
                         </MenuList>
                     </Menu>
 
-                    <Select fontWeight="bold" variant="filled" w="140px" value={clef} onChange={(e) => handleSaveClef(e.target.value)} >
+                    {/* <Select disabled fontWeight="bold" variant="filled" w="140px" value={clef} onChange={(e) => handleSaveClef(e.target.value)} >
 
                         <option value="sol">G clef</option>
-                        <option value="fa">F clef</option>
-                        <option value="do">C clef</option>
+                        <option disabled value="fa">F clef</option>
+                        <option disabled value="do">C clef</option>
 
-                    </Select>
+                    </Select> */}
                     {[...new Array(1)].map((_, m) => (
                         <Menu key={`menu_${m + 1}`}>
                             <MenuButton as={Button} rightIcon={<FiChevronDown />}>
@@ -501,6 +480,14 @@ export default function Home() {
                 </Flex>
 
             </Flex>
+
+            {/* <AbcJSComponent 
+                    notation={
+                        `X:1
+                        K: clef=treble 
+                        [b'a'g'f'e'd'c'bag fedcBAGFE DCB,A,G,F,E,D,C,]
+                    `}
+                    /> */}
 
             <Text fontWeight="medium" fontSize="20" p={5}>Select the Right Answer </Text>
 
