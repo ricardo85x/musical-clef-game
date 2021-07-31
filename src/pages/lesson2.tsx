@@ -80,14 +80,14 @@ export default function Home() {
     );
 
 
-    const [enabledLinesEx1, setEnabledLines] = useState<number[]>(
-        !!localStorage?.getItem('enabledLinesEx1') ? JSON.parse(localStorage.getItem('enabledLinesEx1')) : arrayRange(12, 22)
+    const [enabledLinesLesson2, setEnabledLines] = useState<number[]>(
+        !!localStorage?.getItem('enabledLinesLesson2') ? JSON.parse(localStorage.getItem('enabledLinesLesson2')) : arrayRange(12, 22)
 
     )
 
-    const [enabledTypesEx1, setEnabledTypes] = useState<EnabledTypesProps[]>(
+    const [enabledTypesLesson2, setEnabledTypes] = useState<EnabledTypesProps[]>(
 
-        !!localStorage?.getItem('enabledTypesEx1') ? JSON.parse(localStorage.getItem('enabledTypesEx1')) :
+        !!localStorage?.getItem('enabledTypesLesson2') ? JSON.parse(localStorage.getItem('enabledTypesLesson2')) :
         [...[...[...new Array(abcNotationArray.length)].map((_, i) => {
             return {
                 index: i + 1,
@@ -145,16 +145,16 @@ export default function Home() {
     );
 
 
-    const handleSetEnabledTypes = (_enabledTypesEx1: EnabledTypesProps[]) => {
-        setEnabledTypes(_enabledTypesEx1);
-        localStorage?.setItem("enabledTypesEx1", JSON.stringify(_enabledTypesEx1));
+    const handleSetEnabledTypes = (_enabledTypesLesson2: EnabledTypesProps[]) => {
+        setEnabledTypes(_enabledTypesLesson2);
+        localStorage?.setItem("enabledTypesLesson2", JSON.stringify(_enabledTypesLesson2));
     }
 
     const handleEnableNoteType = (index: number, type: number) => {
 
-        if (!!enabledTypesEx1.filter(f => f.index == index && f.type == type)) {
+        if (!!enabledTypesLesson2.filter(f => f.index == index && f.type == type)) {
 
-            handleSetEnabledTypes(enabledTypesEx1.map(e => {
+            handleSetEnabledTypes(enabledTypesLesson2.map(e => {
 
                 if (e.index == index && e.type == type) {
                     return {
@@ -165,10 +165,10 @@ export default function Home() {
                 return e
             }))
 
-            handleSetEnabledLines(enabledLinesEx1.filter(line => line !== index))
+            handleSetEnabledLines(enabledLinesLesson2.filter(line => line !== index))
 
         } else {
-            handleSetEnabledLines([...enabledLinesEx1, index])
+            handleSetEnabledLines([...enabledLinesLesson2, index])
         }
 
         loadRandomNotes()
@@ -194,7 +194,7 @@ export default function Home() {
         }).map(line => {
 
             // check if enabledType array has index enabled, no mather the type.
-            const currentEnabledType = enabledTypesEx1.filter(f => f.index == line.index && f.enabled)
+            const currentEnabledType = enabledTypesLesson2.filter(f => f.index == line.index && f.enabled)
 
             return {
                 ...line,
@@ -338,9 +338,9 @@ export default function Home() {
     }
 
 
-    const handleSetEnabledLines = (_enabledLinesEx1: number[]) => {
-        setEnabledLines(_enabledLinesEx1);
-        localStorage?.setItem("enabledLinesEx1", JSON.stringify(_enabledLinesEx1));
+    const handleSetEnabledLines = (_enabledLinesLesson2: number[]) => {
+        setEnabledLines(_enabledLinesLesson2);
+        localStorage?.setItem("enabledLinesLesson2", JSON.stringify(_enabledLinesLesson2));
     }
 
     const handleSaveClef = (_clef: string) => {
@@ -413,7 +413,7 @@ export default function Home() {
                             >
                                 {lines.notes.map((note) => {
 
-                                    const enabled = !!enabledTypesEx1.find(f => f.index === note.index && f.type === 1 && f.enabled) ? true : false;
+                                    const enabled = !!enabledTypesLesson2.find(f => f.index === note.index && f.type === 1 && f.enabled) ? true : false;
 
                                     return (
                                         <Box
