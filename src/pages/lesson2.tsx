@@ -1,8 +1,7 @@
-import { Flex, ButtonGroup, IconButton, Box, Grid, Text, Icon, RadioGroup, Radio, Select, Button, Menu, MenuButton, MenuList, MenuItem, Image, useToast } from "@chakra-ui/react"
+import { Flex, Box, Grid, Text, Icon, RadioGroup, Radio, Select, Button, Menu, MenuButton, MenuList, MenuItem, useToast } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react";
 import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
-import { AddIcon, MinusIcon } from "@chakra-ui/icons"
 import Router from "next/router";
 import dynamic from 'next/dynamic';
 
@@ -25,10 +24,29 @@ interface LineProps {
         hasNote: boolean;
         hasLine: boolean;
         base: boolean;
+        type: number[];
+        notation: string;
+    }[]
+    previous: number;
+
+}
+
+
+interface LineProps2 {
+
+    notes: {
+        index: number;
+        enabled: boolean;
+        additional: boolean;
+        hasNote: boolean;
+        hasLine: boolean;
+        base: boolean;
         normalNote: boolean;
         sharpNote: boolean;
         flatNote: boolean;
         type: number[];
+        notation: string;
+
     }[]
     previous: number;
     max: number;
@@ -44,12 +62,17 @@ const arrayRange = (from: number, to: number) => {
 }
 
 
-
 export default function Home() {
 
     const toast = useToast()
 
     const app_tittle = "Smart Music Notes";
+
+    const abcNotationArray = [
+        "b'", "a'", "g'", "f'","e'", "d'", "c'", "b", "a", "g",
+        "f", "e", "d", "c", "B", "A", "G", "F", "E",
+        "D", "C", "B,", "A,", "G,", "F", "E,", "D,", "C,"
+    ]
 
 
     let localStorage: Storage;
@@ -70,7 +93,6 @@ export default function Home() {
     );
 
 
-
     const [enabledLinesEx1, setEnabledLines] = useState<number[]>(
         !!localStorage?.getItem('enabledLinesEx1') ? JSON.parse(localStorage.getItem('enabledLinesEx1')) : arrayRange(12, 22)
 
@@ -79,32 +101,49 @@ export default function Home() {
     const [enabledTypesEx1, setEnabledTypes] = useState<EnabledTypesProps[]>(
 
         !!localStorage?.getItem('enabledTypesEx1') ? JSON.parse(localStorage.getItem('enabledTypesEx1')) :
-            [...[...[...new Array(31)].map((_, i) => {
-                return {
-                    index: i + 1,
-                    type: 0,
-                    enabled: false,
-                }
-            }), ...[...new Array(31)].map((_, i) => {
-                return {
-                    index: i + 1,
-                    type: 1,
-                    enabled: arrayRange(12, 20).includes(i + 1),
-                }
-            })], ...[...new Array(31)].map((_, i) => {
-                return {
-                    index: i + 1,
-                    type: 2,
-                    enabled: false,
-                }
-            })]
+        [...[...[...new Array(abcNotationArray.length)].map((_, i) => {
+            return {
+                index: i + 1,
+                type: 0,
+                enabled: false,
+                notation: `
+                X:1
+                L:1/4
+                _${abcNotationArray[i]}
+                `
+            }
+        }), ...[...new Array(abcNotationArray.length)].map((_, i) => {
+            return {
+                index: i + 1,
+                type: 1,
+                enabled: arrayRange(11, 19).includes(i + 1),
+                notation: `
+                X:1
+                L:1/4
+                ${abcNotationArray[i]}
+                `
+
+            }
+        })], ...[...new Array(abcNotationArray.length)].map((_, i) => {
+            return {
+                index: i + 1,
+                type: 2,
+                enabled: false,
+                notation: `
+                X:1
+                L:1/4
+                ^${abcNotationArray[i]}
+                `
+
+            }
+        })]
     )
 
     const componentLinesRef = useRef(null);
 
-    const [lines, setLines] = useState<LineProps>({ notes: [], previous: 11, max: 0, min: 0 })
+    const [lines, setLines] = useState<LineProps>({ notes: [], previous: 11 })
 
-    const linesRef = useRef<LineProps>({ notes: [], previous: 11, max: 0, min: 0 })
+    const linesRef = useRef<LineProps>({ notes: [], previous: 11 })
 
     const [questions, setQuestions] = useState<{
         name: string,
@@ -150,9 +189,10 @@ export default function Home() {
     }
 
 
+
     const loadRandomNotes = () => {
 
-        let _lines = [...new Array(11 + 9 + 11)].map((_, i) => {
+        let _lines = [...new Array(abcNotationArray.length)].map((_, i) => {
             return {
                 index: i + 1,
                 enabled: false,
@@ -160,9 +200,8 @@ export default function Home() {
                 hasNote: false,
                 hasLine: false,
                 base: false,
-                normalNote: false,
-                sharpNote: false,
-                flatNote: false,
+               
+                notation: "E",
                 type: [1]
             }
         }).map(line => {
@@ -176,45 +215,61 @@ export default function Home() {
                 additional: [
                     ...
                     arrayRange(1, 10),
-                    ...arrayRange(21, 32)
+                    ...arrayRange(20, abcNotationArray.length)
                 ].includes(line.index),
-                hasLine: line.index % 2 == 0,
-                base: arrayRange(12, 21).includes(line.index),
+                hasLine: line.index % 2 !== 0,
+                base: arrayRange(11, 19).includes(line.index),
                 type: !!currentEnabledType.length ?
                     currentEnabledType.map(e => e.type) : [1]
             }
+            
         })
 
+       
         const validIndexes = _lines.filter(
             line => line.enabled &&
                 line.index !== linesRef.current.previous
         ).map(line => line.index)
 
         const selectedIndex = Math.floor(Math.random() * validIndexes.length);
+
         const selectedNote = validIndexes[selectedIndex]
 
         linesRef.current = {
             notes: _lines.map(line => {
+
+                const random_accident_type = line.type[
+                    Math.floor(Math.random() * line.type.length)
+                ]
+
+                const accident = random_accident_type === 0 ?
+                "_" : random_accident_type === 2 ?
+                "^" : "";
+
+
                 return {
                     ...line,
-                    hasNote: selectedNote === line.index
+                    hasNote: selectedNote === line.index,
+                    notation: selectedNote === line.index ? 
+                    `
+                        X:1
+                        L:1/4
+                        ${accident}${abcNotationArray[line.index - 1]}
+                    ` : 
+                    line.notation
                 }
             }),
-            previous: selectedNote,
-            max: Math.max(..._lines.filter(f => f.enabled).map(m => m.index)),
-            min: Math.min(..._lines.filter(f => f.enabled).map(m => m.index))
+            previous: selectedNote
+           
         }
 
         setLines(linesRef.current)
 
-
         generateRandomQuestions(selectedNote)
-
-
-
-
+        
 
     }
+
 
     const generateRandomQuestions = (_selectedNoteIndex: number) => {
 
@@ -228,27 +283,26 @@ export default function Home() {
             { name: "Si", code: "B", correct: false },
         ]
 
-        const letters = ["A", "B", "C", "D", "E", "F", "G"]
+        const letters = ["A","B", "C", "D", "E", "F", "G"]
 
-        let actual_letter = 0; // start from letter B
+        let actual_letter = 2;
 
         switch (clef) {
             case "sol":
-                actual_letter = 3;
+                actual_letter = 2;
                 break;
             case "fa":
-                actual_letter = 5;
-                break;
-            case "do":
                 actual_letter = 4;
                 break;
+            case "do":
+                actual_letter = 3;
+                break;
             default:
-                actual_letter = 3; // default SOL(G)
+                actual_letter = 2; // default SOL(G)
         }
 
 
-
-        const _Clef = [...new Array(31)].map((_, i) => {
+        const _Clef = [...new Array(abcNotationArray.length)].map((_, i) => {
 
             actual_letter--;
             if (actual_letter < 0) {
@@ -269,6 +323,8 @@ export default function Home() {
         }))
 
         setSelectedAnswer("")
+
+        console.log("Cruzes",_questions)
 
     }
 
@@ -304,27 +360,6 @@ export default function Home() {
     }
 
 
-    const handleSetNoteTextSize = (_value: number,) => {
-        let new_size = noteTextSize + _value;
-
-        if (new_size > 1) {
-
-            if (new_size > 10) {
-                if (new_size % 2 !== 0) {
-                    if (_value > 0) {
-                        new_size++;
-                    } else {
-                        new_size--;
-                    }
-                }
-            }
-            setNoteTextSize(new_size);
-            localStorage?.setItem("noteTextSize", JSON.stringify(new_size));
-        }
-
-
-    }
-
     const handleSetEnabledLines = (_enabledLinesEx1: number[]) => {
         setEnabledLines(_enabledLinesEx1);
         localStorage?.setItem("enabledLinesEx1", JSON.stringify(_enabledLinesEx1));
@@ -349,77 +384,11 @@ export default function Home() {
         }
     }
 
-
-    const abcRef = useRef<HTMLDivElement>(undefined)
-
-    const abc_notation = `
-    % - instruction to first line
-    X:1 
-    % - Show 4/4 in the beginning
-    % M:4/4
-    L:1/4
-  
-    % - D2 modifier the duration of the note 
-    b' C,`;
-
-    const abcNotationArray = [
-        "b'","a'","g'","f'","d'","c'", "b", "a", "g",
-        "f", "e", "d", "c", "B", "A", "G", "F", "E",
-        "D", "C", "B,", "A,", "G,", "F", "E,", "D,", "C,"
-    ]
-    
-
-    const renderABCx = () => {
-
-        setTimeout(() => {
-
-         //   abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
-
-        }, 1000 * 5)
-
-        if(Element){
-            console.log("com element", Element)
-        } else {
-            console.log("sem element")
-        }
-
-        if(process.browser){
-            // abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
-
-        } else {
-            console.log("not in browser")
-        }
-
-        if(abcRef?.current?.id){
-            console.log("ID",abcRef.current.id)
-            console.log(abcRef.current)
-
-            setTimeout(() => {
-                // abcjs.renderAbc(abcRef.current.id, "X:1\nK:D\nDDAA|BBA2|\n");
-            }, 1000 * 2)
-
-          
-           //
-        }
-        console.log("rendering")
-
-    }
-
-    useEffect(() => {renderABCx()}, [])
-
-  
-
-
     return (
         <Flex align="center" justify="center" direction="column"
-
             onKeyDown={handleKeyPress}
             tabIndex={0}
         >
-
-
-
-
 
             <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center", "center", "space-between"]}>
 
@@ -432,9 +401,8 @@ export default function Home() {
                     gridGap="2" flexWrap="wrap" direction="row" align="center" justify="center"
                 >
 
-
-                    <Menu  >
-                        <MenuButton colorScheme="blue" as={Button} rightIcon={<FiChevronDown />}>
+                    <Menu >
+                        <MenuButton as={Button} rightIcon={<FiChevronDown />}>
                             Lesson 2
                         </MenuButton>
                         <MenuList
@@ -446,18 +414,6 @@ export default function Home() {
                             <MenuItem >Lesson 2</MenuItem>
                         </MenuList>
                     </Menu>
-
-
-                    <ButtonGroup colorScheme="black" size="sm" isAttached variant="outline">
-                        <IconButton onClick={() => handleSetNoteTextSize(-1)} aria-label="decrease Size" icon={<MinusIcon />} />
-
-                        <Button mr="-px">Size {noteTextSize}</Button>
-                        <IconButton onClick={() => handleSetNoteTextSize(1)} aria-label="increase Size" icon={<AddIcon />} />
-                    </ButtonGroup>
-
-
-
-
 
                     <Select fontWeight="bold" variant="filled" w="140px" value={clef} onChange={(e) => handleSaveClef(e.target.value)} >
 
@@ -529,15 +485,7 @@ export default function Home() {
                                                 <Box
                                                     color={`${!!enabled ? "green" : "black"}`}
                                                 >
-                                                    {/* {m == 0 ? "b" : m == 2 && "#"} */}
                                                     <Icon w={6} h={6} as={IoMusicalNote} />
-
-
-
-                                                    {/* <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} /> */}
-
-
-
 
                                                 </Box>
                                             </Flex>
@@ -552,28 +500,7 @@ export default function Home() {
 
                 </Flex>
 
-
-
-
             </Flex>
-
-{/* 
-            <Abcjs
-                abcNotation={
-                    'X:1\nT:Example\nM:4/4\nC:Trad.\nK:G\n|:Gccc dedB|dedB dedB|c2ec B2dB|c2A2 A2BA|'
-                }
-                parserParams={{}}
-                engraverParams={{ responsive: 'resize' }}
-                renderParams={{ viewportHorizontal: true }}
-            /> */}
-
-           
-            <Box width="100%" align="center" justify="center">
-                <AbcJSComponent 
-                    notation={abc_notation}
-                />
-            </Box>
-           
 
             <Text fontWeight="medium" fontSize="20" p={5}>Select the Right Answer </Text>
 
@@ -591,84 +518,17 @@ export default function Home() {
 
             </RadioGroup>
 
-            <Box
-                w="100%"
-                ref={componentLinesRef}
-                align="center"
-
-                pt="10"
-
-            >
-
-                {lines.notes.filter(f =>
-                    // show only between min and max enabled or base
-                    (f.index >= lines.min && f.index <= lines.max) || f.base
-
-                ).map((note) => {
-
-                    const current_type = note.type[
-                        Math.floor(Math.random() * note.type.length)
-                    ]
-
-                    return (
-                        <Flex
-                            key={note.index}
-                            direction="row"
-                            align="center"
-                            justify="center"
-
-
-
-                            _after={note.hasLine ? {
-                                flexGrow: 1,
-                                flexShrink: 1,
-                                flexBasis: "auto",
-                                content: '""',
-                                height: 0,
-                                borderBottom: `2px solid black`,
-
-                                marginLeft: `-${noteTextSize}`
-                            } : {}}
-
-                            _before={note.hasLine ? {
-                                flexGrow: 1,
-                                flexShrink: 1,
-                                flexBasis: "auto",
-                                content: '""',
-                                height: 0,
-                                borderBottom: `2px solid black`,
-                                marginRight: `-${noteTextSize}`
-
-                            } : {}}
-
-                            w={note.additional ? "40px" : "100%"}
-
-
-                        >
-                            <Flex direction="row" w={noteTextSize} minW={noteTextSize} h={noteTextSize} >
-                                {
-                                    note.hasNote &&
-                                    (
-                                        <Flex direction="row" align="flex-end" >
-                                            <Flex position="absolute" direction="row" align="flex-end">
-
-                                                {current_type == 0 ?
-                                                    <Image w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/flat_music_note.svg" /> : current_type == 2 &&
-                                                    <Image w={noteTextSize * 0.5} h={noteTextSize * 0.5} src="/images/sharp_music_note.svg" />
-                                                }
-                                                {/* <Icon w={noteTextSize} h={noteTextSize} as={IoMusicalNote} /> */}
-                                                <Image w={noteTextSize} h={noteTextSize} src="/images/quarter_note.svg" />
-
-                                            </Flex>
-
-                                        </Flex>
-                                    )
-                                }
-                            </Flex>
-                        </Flex>
-                    )
-                })}
+            <Box width="100%" align="center" justify="center">
+                <AbcJSComponent 
+                    notation={
+                        lines.notes.find(f => f.enabled && f.hasNote) ? 
+                        lines.notes.find(f => f.enabled && f.hasNote).notation:
+                        ""
+                    }
+                />
             </Box>
+
+            
         </Flex>
     )
 }
