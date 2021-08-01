@@ -316,24 +316,28 @@ export default function Home() {
 
         setSelectedAnswer(selected)
 
-        if (questions.find(f => f.code === selected && f.correct)) {
+        const right_answer = questions.find(f => f.correct)
+        let interval = 1;
+        if (right_answer.code === selected) {
             toast({
                 title: "Correct!",
                 status: "success",
-                duration: 1000 * 1
+                duration: 1000 * interval
             })
         } else {
+            interval = 3;
             toast({
                 title: "Wrong Answer!",
+                description: `The right answer is ( ${right_answer.code} - ${right_answer.name} )`,
                 status: "error",
-                duration: 1000 * 1
+                duration: 1000 * interval
             })
         }
 
         setTimeout(
             () => {
                 loadRandomNotes()
-            }, 1000 * 1 // wait 1 seconds
+            }, 1000 * interval // wait 1 seconds
         )
     }
 
