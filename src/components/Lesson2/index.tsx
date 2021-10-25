@@ -2,11 +2,11 @@ import { Flex, Box, Grid, Text, Icon, RadioGroup, Radio, Select, Button, Menu, M
 import { useEffect, useRef, useState } from "react";
 import { IoMusicalNote } from "react-icons/io5"
 import { FiChevronDown } from "react-icons/fi"
-import { NoteMenu} from "../components/NoteMenu"
+import { NoteMenu} from "../NoteMenu"
 import Router from "next/router";
 import dynamic from 'next/dynamic';
 
-const AbcJSComponent = dynamic(() => import('../components/AbcJS'), {
+const AbcJSComponent = dynamic(() => import('../AbcJS'), {
     ssr: false
 })
 
@@ -50,7 +50,7 @@ const arrayRange = (from: number, to: number) => {
 }
 
 
-export default function Home() {
+export const Lesson2 = () => {
 
     const toast = useToast()
 
@@ -374,18 +374,30 @@ export default function Home() {
             tabIndex={0}
         >
 
-            <Flex backgroundColor="gray.200" w="100%" gridGap="2" flexWrap="wrap" direction="row" width="100%" align="flex-start" justify={["center", "center", "space-between"]}>
+<Flex 
+                // backgroundColor="gray.200"
+                bgGradient="linear(to-br, gray.200, gray.400)"
+                w="100%"
+                gridGap="2"
+                flexWrap="wrap"
+                direction="row"
+                width="100%"
+                justify={["center", "center", "space-between"]}
+                align="center"
+                boxShadow="0 1px 1px rgba(0, 0, 0, 0.25)"
 
-                <Box p="3" >
-                    <Text fontSize="28" fontWeight="medium" pb="2">{app_tittle}</Text>
-                </Box>
+            >
+
+             
+                <Text fontSize="28" fontWeight="medium" paddingStart="2">{app_tittle}</Text>
+               
 
                 <Flex
                     p="3"
                     gridGap="2" flexWrap="wrap" direction="row" align="center" justify="center"
                 >
 
-                    <NoteMenu lesson="02" clef="C" />
+                    {/* <NoteMenu lesson="02" clef="C" /> */}
 
 
                     <Menu >
@@ -397,18 +409,12 @@ export default function Home() {
                             minW="139px"
                             backgroundColor="gray.100"
                         >
-                            <MenuItem onClick={() => Router.push("/")}>Lesson 1</MenuItem>
+                            <MenuItem onClick={() => Router.push("/lesson/1")}>Lesson 1</MenuItem>
                             <MenuItem >Lesson 2</MenuItem>
                         </MenuList>
                     </Menu>
 
-                    {/* <Select disabled fontWeight="bold" variant="filled" w="140px" value={clef} onChange={(e) => handleSaveClef(e.target.value)} >
-
-                        <option value="sol">G clef</option>
-                        <option disabled value="fa">F clef</option>
-                        <option disabled value="do">C clef</option>
-
-                    </Select> */}
+                   
 
                     {[...new Array(1)].map((_, m) => (
                         <Menu key={`menu_${m + 1}`}>
@@ -504,13 +510,7 @@ export default function Home() {
 
             */}
 
-            <AbcJSComponent 
-                    notation={
-                        `X:1
-                        K: clef=alto 
-                        b'a'g'f'e'd'c'bag fedcBAGFE DCB,A,G,F,E,D,C,
-                    `}
-                    />
+      
 
             <Text fontWeight="medium" fontSize="20" p={5}>Select the Right Answer </Text>
 
