@@ -69,10 +69,10 @@ export const ProgressBeat = ({ time, count }: ProgressBeatProps) => {
     }
 
     return (
-        <CircularProgress
+        <CircularProgress 
             color={colorsProgress[`${progress.percent}`]}
             size="120px" value={progress.percent} >
-            <CircularProgressLabel>{progress.progressText}</CircularProgressLabel>
+            <CircularProgressLabel  >{progress.progressText}</CircularProgressLabel>
         </CircularProgress>
     )
 }
